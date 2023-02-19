@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import report from "./report.js";
 
 const CheckSchema = new mongoose.Schema({
   name: {
@@ -20,12 +21,10 @@ const CheckSchema = new mongoose.Schema({
   },
   timeout: {
     type: Number,
-
     default: 5000, // defaults to 5 seconds (5000ms)
   },
   interval: {
     type: Number,
-
     default: 600000, // defaults to 10 minutes (600000ms)
   },
   threshold: {
@@ -48,6 +47,7 @@ const CheckSchema = new mongoose.Schema({
   ignoreSSL: {
     type: Boolean,
   },
+  report: report
 });
 
 export default mongoose.model("Check",CheckSchema)

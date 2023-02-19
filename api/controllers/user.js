@@ -2,6 +2,7 @@ import User from "../models/user.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../utils/tokensender.js";
+import check from "../models/check.js";
 
 // CREATE new User
 export const register = async (req, res, next) => {
@@ -88,6 +89,10 @@ export const getUser = async (req, res, next) => {
 //DELETE user
 export const deleteUser = async (req, res, next) => {
   try {
+    const userChecks = await User.findById(req.params.id).select( "checkIds");
+    await check.deleteMany({_id : {
+      $in : userChecks.checkIds
+    }})
     await User.findByIdAndDelete(req.params.id);
     res.status(200).json("User has been deleted");
   } catch (err) {

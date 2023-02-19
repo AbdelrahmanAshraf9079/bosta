@@ -1,17 +1,25 @@
 import Check from "../models/check.js";
-import user from "../models/user.js";
+import User from "../models/user.js";
+import { monitor } from "../utils/urlMonitor/urlMonitor.js";
 
 //CREATE Check
 export const createCheck = async (req, res, next) => {
   const newCheck = new Check(req.body);
+  const outages = 0;
+  const downtime = 0;
+  const uptime = 0;
+
   try {
-    //save Check to database
-    const savedCheck = await newCheck.save();
-    //get user by id
-    await user.findByIdAndUpdate(req.body.userId, {
-      $push: { checkIds: savedCheck.id },
-    });
-    res.status(200).json(savedCheck);
+    await monitor(
+      newCheck.url,
+      newCheck.interval,
+      newCheck.timeout,
+      newCheck,
+      req.body.userId
+      ,outages,downtime,uptime
+    );
+
+    res.status(200).json("Check created successfully");
   } catch (err) {
     next(err);
   }
@@ -33,9 +41,9 @@ export const updateCheck = async (req, res, next) => {
 
 //DELETE Check
 export const deleteCheck = async (req, res, next) => {
-  const checkId = req.params.id
+  const checkId = req.params.id;
   try {
-    await user.findByIdAndUpdate(req.body.userId, {
+    await User.findByIdAndUpdate(req.body.userId, {
       $pull: { checkIds: checkId },
     });
     await Check.findByIdAndDelete(checkId);

@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import usersRoute from "./routes/user.js";
 import checkRoute from "./routes/check.js";
-import reportRoute from "./routes/report.js";
 import cookieParser from "cookie-parser"
 const app = express();
 dotenv.config();
@@ -30,7 +29,6 @@ app.use(express.json()); //Allows express server to use json objects
 
 app.use("/user", usersRoute);
 app.use("/check", checkRoute);
-app.use("/report", reportRoute);
 
 
 //error handling middleware
