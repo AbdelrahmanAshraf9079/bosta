@@ -1,7 +1,7 @@
 import User from "../models/user.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { sendEmail } from "../utils/tokensender.js";
+import { sendEmail } from "../utils/emailsender.js";
 import check from "../models/check.js";
 
 // CREATE new User
@@ -14,8 +14,8 @@ export const register = async (req, res, next) => {
       email: req.body.email,
       password: hash,
     });
-
-    sendEmail(newUser.email, newUser.id);
+    console.log();
+    sendEmail(newUser.email, newUser.id, "Email Verification");
     await newUser.save();
     res.status(200).send(newUser);
   } catch (err) {
@@ -36,21 +36,22 @@ export const login = async (req, res, next) => {
     if (!isPasswordCorrect)
       return next(createError(400, "Wrong password or username!"));
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT);
-
-    const { password, ...otherDetails } = user._doc;
-    let body;
     if (user.verified == false) {
-      body = "Please Verify your user";
+      res.status(403).send({
+        message : "Please verify your user first"
+      });
     } else {
-      body = { ...otherDetails };
+      const token = jwt.sign({ id: user.id }, process.env.JWT);
+
+      const { password, ...otherDetails } = user._doc;
+      const body = { ...otherDetails };
+      res
+        .cookie("access_token", token, {
+          httpOnly: true,
+        })
+        .status(200)
+        .json({ body });
     }
-    res
-      .cookie("access_token", token, {
-        httpOnly: true,
-      })
-      .status(200)
-      .json({ body });
   } catch (err) {
     next(err);
   }
@@ -68,7 +69,7 @@ export const verifyEmail = async (req, res, next) => {
         "Email verification failed,possibly the link is invalid or expired"
       );
     } else {
-      const user = await User.findByIdAndUpdate(id,{verified:true});
+      const user = await User.findByIdAndUpdate(id, { verified: true });
       res.send("Your Email was successfully verified");
       next();
     }
@@ -89,10 +90,12 @@ export const getUser = async (req, res, next) => {
 //DELETE user
 export const deleteUser = async (req, res, next) => {
   try {
-    const userChecks = await User.findById(req.params.id).select( "checkIds");
-    await check.deleteMany({_id : {
-      $in : userChecks.checkIds
-    }})
+    const userChecks = await User.findById(req.params.id).select("checkIds");
+    await check.deleteMany({
+      _id: {
+        $in: userChecks.checkIds,
+      },
+    });
     await User.findByIdAndDelete(req.params.id);
     res.status(200).json("User has been deleted");
   } catch (err) {

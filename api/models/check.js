@@ -46,6 +46,7 @@ const CheckSchema = new mongoose.Schema({
   },
   ignoreSSL: {
     type: Boolean,
+    default: false,
   },
   report: report
 });

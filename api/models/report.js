@@ -27,7 +27,17 @@ const ReportSchema = new mongoose.Schema(
       required: true,
     },
     history: {
-      type: [String],
+      type: [
+        {
+          status: String,
+          responseTime: String,
+          timestamp: {
+            type: Date,
+            default: Date.now(),
+          },
+        },
+        { timestamps: true },
+      ],
       required: true,
     },
   },

@@ -15,8 +15,11 @@ export const createCheck = async (req, res, next) => {
       newCheck.interval,
       newCheck.timeout,
       newCheck,
-      req.body.userId
-      ,outages,downtime,uptime
+      req.body.userId,
+      outages,
+      downtime,
+      uptime,
+      true
     );
 
     res.status(200).json("Check created successfully");
@@ -43,11 +46,13 @@ export const updateCheck = async (req, res, next) => {
 export const deleteCheck = async (req, res, next) => {
   const checkId = req.params.id;
   try {
-    await User.findByIdAndUpdate(req.body.userId, {
+    const user = await User.findByIdAndUpdate(req.body.userId, {
       $pull: { checkIds: checkId },
     });
     await Check.findByIdAndDelete(checkId);
-    res.status(200).json("Check has been deleted");
+    res.status(200).json({
+      message: "Check has been deleted",
+    });
   } catch (err) {
     next(err);
   }
@@ -63,13 +68,28 @@ export const getCheck = async (req, res, next) => {
   }
 };
 
-// //GET check : check ? by tags
-// export const getCheckByTag = async (req, res, next)=>{
-//     const tag = req.body.tag
-//     try{
-//         // const check = await Check.find(req.params.id)
-//         // res.status(200).json(check);
-//     }catch(err){
-//         next(err);
-//     }
-//     }
+//GET check : check ? by tags
+export const getCheckByTag = async (req, res, next) => {
+  const tag = req.body.tag;
+  const userId = req.body.userId;
+  try {
+    const user = await User.findById(userId);
+    const checkIds = user.checkIds;
+
+    const checksToReturn = await Check.find({
+      _id: {
+        $in: checkIds,
+      },
+      tags: {
+        $in: tag,
+      },
+    });
+    if (checksToReturn.length == 0) {
+      res.status(200).json(`No checks were found with the tag ${tag}`);
+    } else {
+      res.status(200).json(checksToReturn);
+    }
+  } catch (err) {
+    next(err);
+  }
+};

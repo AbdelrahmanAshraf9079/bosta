@@ -1,7 +1,8 @@
 import nodemailer from "nodemailer";
 import jwt from "jsonwebtoken";
 
-export const sendEmail = (email, id) => {
+
+export const sendEmail = (email, id,subject,text="") => {
   const transporter = nodemailer.createTransport({
     service: "Gmail",
     auth: {
@@ -9,7 +10,6 @@ export const sendEmail = (email, id) => {
       pass: process.env.generatedPassword,
     },
   });
-
   const token = jwt.sign(
     {
       email: email,
@@ -25,12 +25,12 @@ export const sendEmail = (email, id) => {
     to: email,
 
     // Subject of Email
-    subject: "Email Verification",
+    subject: subject,
     // This would be the text of email body
-    text: `Hi! There, You have recently created a new user and entered your email.
+    text: subject === "Email Verification" ? `Hi! There, You have recently created a new user and entered your email.
                   Please follow the given link to verify your email
                   http://localhost:8800/user/verify/${token}
-                  Thanks`,
+                  Thanks` : text,
   };
 
   //The sendMail method of the transporter object simply sends the mail to the given address
